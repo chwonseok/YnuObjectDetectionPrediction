@@ -8,7 +8,7 @@ namespace YnuClassificationPrediction
     {
         // 1번 여기를 먼저 셋업해 주세요
         static readonly string Endpoint = "https://chwscustomvision-prediction.cognitiveservices.azure.com/";
-        static readonly string PredictionKey = "55324c61185a4988b6eeecec579e2cd2";
+        static readonly string PredictionKey = "873c10b5fe6d410dbfc789f3629c260d";
         static readonly string ProjectId = "abbafae8-c681-4a27-8da0-2eddb2addb2f";
         static readonly string PublishedName = "Iteration3";
 
@@ -16,7 +16,7 @@ namespace YnuClassificationPrediction
         static readonly string TestImageFolder = @"C:\Users\chwonseok\source\repos\YnuObjectDetectionPrediction\Images\";
 
         // 3번 ObjectDtection 후 결과가 담길 폴더 경로 --------------------------- 사용에 따라 수정
-        static readonly string ResultFolder = @"C:\Users\chwonseok\source\repos\YnuObjectDetectionPrediction\Result\";
+        static readonly string ResultFolder = @"C:\Users\chwonseok\source\repos\YnuObjectDetectionPrediction\Result\result.csv";
 
         static async Task Main(string[] args)
         {
@@ -39,7 +39,7 @@ namespace YnuClassificationPrediction
 
                 foreach (var prediction in imagePrediction.Predictions)
                 {
-                    var aLine = $"{fileName},{prediction.TagName},{prediction.Probability}";
+                    var aLine = $"{fileName},{prediction.TagName},{prediction.Probability},{prediction.BoundingBox.Top},{prediction.BoundingBox.Height},{prediction.BoundingBox.Left},{prediction.BoundingBox.Width}";
                     csvResult.AppendLine(aLine);
                 }
 
@@ -69,7 +69,8 @@ namespace YnuClassificationPrediction
             {
                 var predictionApi = AuthenticatePrediction(Endpoint, PredictionKey);
 
-                var predictions = await predictionApi.ClassifyImageWithNoStoreAsync
+                // var predictions = await predictionApi.ClassifyImageWithNoStoreAsync(new Guid(ProjectId), PublishedName, imageStream);
+                var predictions = await predictionApi.DetectImageWithNoStoreAsync
                     (new Guid(ProjectId), PublishedName, imageStream);
                 return predictions;
             };
