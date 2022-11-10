@@ -1,9 +1,11 @@
 ﻿using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction;
 using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction.Models;
 using SixLabors.ImageSharp;
+using Rectangle = System.Drawing.Rectangle;
 
 namespace YnuClassificationPrediction
 {
+    
     class PredictionConsole
     {
         // 1번 여기를 먼저 셋업해 주세요
@@ -29,32 +31,48 @@ namespace YnuClassificationPrediction
 
             foreach (var imagePath in imagesPaths)
             {
-                // var csvResult = new StringBuilder();
-
                 // Get each file name
                 var fileName = Path.GetFileName(imagePath);
 
                 // Get each image size
-
                 Image image = Image.Load($"{TestImageFolder}{fileName}");
+                var imageWidth = image.Width;
+                var imageHeight = image.Height;
 
+                // Setup boundingBox dimension
+                double x = 0;
+                double y = 0;
+                double boundingBoxWidth = 0;
+                double boundingBoxHeight = 0;
 
                 // Get predictions of each image
-                //var imagePrediction = await GetImagePredictionsAsync(imagePath);
+                var predictions = await GetImagePredictionsAsync(imagePath);
 
-                //foreach (var prediction in imagePrediction.Predictions)
-                //{
-                //    var tagName = prediction.TagName;
-                //    //var aLine = $"{fileName},{prediction.TagName},{prediction.Probability},{prediction.BoundingBox.Top},{prediction.BoundingBox.Height},{prediction.BoundingBox.Left},{prediction.BoundingBox.Width}";
-                //    //csvResult.AppendLine(aLine);
-                //}
+                // 고도화 필요
+                var threshhold = 0.80;
 
-                //allCsvResult.AppendLine(csvResult.ToString());
-                //Console.WriteLine($"filename: {fileName}, Prediction Completed");
+                var highProbability = predictions.Predictions.AsQueryable()
+                    .Where(x => x.Probability >= threshhold)
+                    .ToList();
+
+                foreach (var item in highProbability)
+                {
+                    x = item.BoundingBox.Left * imageWidth;
+                    y = item.BoundingBox.Top * imageHeight;
+                    boundingBoxWidth = item.BoundingBox.Width * imageWidth;
+                    boundingBoxHeight = item.BoundingBox.Height * imageHeight;
+                    
+                    Console.WriteLine($"rectangle starting position is ({x},{y})\n{boundingBoxWidth}, {boundingBoxHeight}");
+                    Console.WriteLine($"tagname:{item.TagName}, probability:{item.Probability}");
+                }
+
+                // Draw boundingBox on the image
+                Rectangle rectangle = new Rectangle(x, y, imageWidth, imageHeight);
+                
+
+                Console.WriteLine($"filename: {fileName}, Prediction Completed");
                 predictionCount++;
             }
-
-            //await File.WriteAllTextAsync(ResultFolder, allCsvResult.ToString());
             Console.WriteLine($"{predictionCount}개 이미지 대상 Prediction 완료");
         }
 
@@ -75,7 +93,6 @@ namespace YnuClassificationPrediction
             {
                 var predictionApi = AuthenticatePrediction(Endpoint, PredictionKey);
 
-                // var predictions = await predictionApi.ClassifyImageWithNoStoreAsync(new Guid(ProjectId), PublishedName, imageStream);
                 var predictions = await predictionApi.DetectImageWithNoStoreAsync
                     (new Guid(ProjectId), PublishedName, imageStream);
                 return predictions;
