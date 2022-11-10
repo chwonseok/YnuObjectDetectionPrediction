@@ -1,6 +1,6 @@
 ﻿using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction;
 using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction.Models;
-using System.Text;
+using SixLabors.ImageSharp;
 
 namespace YnuClassificationPrediction
 {
@@ -25,30 +25,36 @@ namespace YnuClassificationPrediction
 
             var predictionCount = 0;
 
-            var allCsvResult = new StringBuilder();
+            //var allCsvResult = new StringBuilder();
 
             foreach (var imagePath in imagesPaths)
             {
-                var csvResult = new StringBuilder();
+                // var csvResult = new StringBuilder();
 
                 // Get each file name
                 var fileName = Path.GetFileName(imagePath);
 
+                // Get each image size
+
+                Image image = Image.Load($"{TestImageFolder}{fileName}");
+
+
                 // Get predictions of each image
-                var imagePrediction = await GetImagePredictionsAsync(imagePath);
+                //var imagePrediction = await GetImagePredictionsAsync(imagePath);
 
-                foreach (var prediction in imagePrediction.Predictions)
-                {
-                    var aLine = $"{fileName},{prediction.TagName},{prediction.Probability},{prediction.BoundingBox.Top},{prediction.BoundingBox.Height},{prediction.BoundingBox.Left},{prediction.BoundingBox.Width}";
-                    csvResult.AppendLine(aLine);
-                }
+                //foreach (var prediction in imagePrediction.Predictions)
+                //{
+                //    var tagName = prediction.TagName;
+                //    //var aLine = $"{fileName},{prediction.TagName},{prediction.Probability},{prediction.BoundingBox.Top},{prediction.BoundingBox.Height},{prediction.BoundingBox.Left},{prediction.BoundingBox.Width}";
+                //    //csvResult.AppendLine(aLine);
+                //}
 
-                allCsvResult.AppendLine(csvResult.ToString());
-                Console.WriteLine($"filename: {fileName}, Prediction Completed");
+                //allCsvResult.AppendLine(csvResult.ToString());
+                //Console.WriteLine($"filename: {fileName}, Prediction Completed");
                 predictionCount++;
             }
 
-            await File.WriteAllTextAsync(ResultFolder, allCsvResult.ToString());
+            //await File.WriteAllTextAsync(ResultFolder, allCsvResult.ToString());
             Console.WriteLine($"{predictionCount}개 이미지 대상 Prediction 완료");
         }
 
