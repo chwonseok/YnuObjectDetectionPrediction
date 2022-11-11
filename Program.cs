@@ -1,7 +1,6 @@
 ﻿using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction;
 using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction.Models;
 using SixLabors.ImageSharp;
-using Rectangle = System.Drawing.Rectangle;
 
 namespace YnuClassificationPrediction
 {
@@ -64,11 +63,12 @@ namespace YnuClassificationPrediction
                     
                     Console.WriteLine($"rectangle starting position is ({x},{y})\n{boundingBoxWidth}, {boundingBoxHeight}");
                     Console.WriteLine($"tagname:{item.TagName}, probability:{item.Probability}");
+
+                    // Draw boundingBox on the image
+                    
+                    
                 }
 
-                // Draw boundingBox on the image
-                Rectangle rectangle = new Rectangle(x, y, imageWidth, imageHeight);
-                
 
                 Console.WriteLine($"filename: {fileName}, Prediction Completed");
                 predictionCount++;
