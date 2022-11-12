@@ -1,6 +1,7 @@
 ﻿using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction;
 using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction.Models;
 using SixLabors.ImageSharp;
+using YnuObjectDetectionPrediction;
 
 namespace YnuClassificationPrediction
 {
@@ -13,11 +14,11 @@ namespace YnuClassificationPrediction
         static readonly string ProjectId = "abbafae8-c681-4a27-8da0-2eddb2addb2f";
         static readonly string PublishedName = "Iteration3";
 
-        // 2번 ObjectDtection 전 이미지의 폴더 경로 --------------------------- 사용에 따라 수정
-        static readonly string TestImageFolder = @"C:\Users\chwonseok\source\repos\YnuObjectDetectionPrediction\Images\";
+        // 2번 ObjectDetection 전 이미지의 폴더 경로 --------------------------- 사용에 따라 수정
+        static readonly string TestImageFolder = @"C:\Users\최원석\Source\Repos\YnuObjectDetectionPrediction\Images\";
 
-        // 3번 ObjectDtection 후 결과가 담길 폴더 경로 --------------------------- 사용에 따라 수정
-        static readonly string ResultFolder = @"C:\Users\chwonseok\source\repos\YnuObjectDetectionPrediction\Result\result.csv";
+        // 3번 ObjectDetection 후 결과가 담길 폴더 경로 --------------------------- 사용에 따라 수정
+        static readonly string ResultFolder = @"C:\Users\chwonseok\source\repos\YnuObjectDetectionPrediction\Result\";
 
         static async Task Main(string[] args)
         {
@@ -26,7 +27,7 @@ namespace YnuClassificationPrediction
 
             var predictionCount = 0;
 
-            //var allCsvResult = new StringBuilder();
+            var outputPath = @"C:\Users\chwonseok\source\repos\YnuObjectDetectionPrediction\Result\";
 
             foreach (var imagePath in imagesPaths)
             {
@@ -34,7 +35,7 @@ namespace YnuClassificationPrediction
                 var fileName = Path.GetFileName(imagePath);
 
                 // Get each image size
-                Image image = Image.Load($"{TestImageFolder}{fileName}");
+                Image image = Image.Load($"{imagePath}");
                 var imageWidth = image.Width;
                 var imageHeight = image.Height;
 
@@ -56,16 +57,20 @@ namespace YnuClassificationPrediction
 
                 foreach (var item in highProbability)
                 {
-                    x = item.BoundingBox.Left * imageWidth;
-                    y = item.BoundingBox.Top * imageHeight;
-                    boundingBoxWidth = item.BoundingBox.Width * imageWidth;
-                    boundingBoxHeight = item.BoundingBox.Height * imageHeight;
-                    
+                    RectangleInfo newBoundingBox = new RectangleInfo()
+                    {
+                        BoundingBoxTag = item.TagName,
+                        BoundingBoxX = item.BoundingBox.Left * imageWidth,
+                        BoundingBoxY = item.BoundingBox.Top * imageHeight,
+                        BoundingBoxWidth = item.BoundingBox.Width * imageWidth,
+                        BoundingBoxHeight= item.BoundingBox.Height * imageHeight
+                    };
+
                     Console.WriteLine($"rectangle starting position is ({x},{y})\n{boundingBoxWidth}, {boundingBoxHeight}");
                     Console.WriteLine($"tagname:{item.TagName}, probability:{item.Probability}");
 
                     // Draw boundingBox on the image
-                    
+                    Drawing.DrawBoundingBox(newBoundingBox, imagePath, outputPath);
                     
                 }
 
