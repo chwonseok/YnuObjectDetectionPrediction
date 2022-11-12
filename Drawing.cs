@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 
 namespace YnuObjectDetectionPrediction
 {
@@ -12,23 +13,46 @@ namespace YnuObjectDetectionPrediction
     {
         public static void DrawBoundingBox(RectangleInfo rectangleInfo, string filePath, string outputPath)
         {
-            var image = Image.FromFile(filePath);
-            var imageGraphics = Graphics.FromImage(image);
-
-            Pen pen = new Pen(Color.Black, 2);
+            var imgWidth = 1000;
+            var imgHeight = 667;
 
             int x = Convert.ToInt32(rectangleInfo.BoundingBoxX);
             int y = Convert.ToInt32(rectangleInfo.BoundingBoxY);
             int width = Convert.ToInt32(rectangleInfo.BoundingBoxWidth);
             int height = Convert.ToInt32(rectangleInfo.BoundingBoxHeight);
 
-            var rect = new Rectangle(x, y, width, height);
-            imageGraphics.DrawRectangle(pen, rect);
+            //Bitmap bitmap = new(imgWidth, imgHeight, PixelFormat.Format24bppRgb);
+            var img = Image.FromFile(filePath);
 
-            imageGraphics.Save();
-            imageGraphics.
+            using (Graphics g = Graphics.FromImage(img))
+            {
+                using (Pen black = new(Color.Black, 2))
+                {
+                    g.DrawRectangle(black, new Rectangle(x, y, width, height));
+                }
+                img.Save(outputPath);
+            }
 
-            image.Save(outputPath);
+            //var image = Image.FromFile(filePath);
+            //var imageGraphics = Graphics.FromImage(image);
+
+            //Pen pen = new(Color.Black, 2);
+            
+            //int x = Convert.ToInt32(rectangleInfo.BoundingBoxX);
+            //int y = Convert.ToInt32(rectangleInfo.BoundingBoxY);
+            //int width = Convert.ToInt32(rectangleInfo.BoundingBoxWidth);
+            //int height = Convert.ToInt32(rectangleInfo.BoundingBoxHeight);
+
+            //var rect = new Rectangle(x, y, width, height);
+            //imageGraphics.DrawRectangle(pen, rect); // 여기까지 확실히 그려는 진 듯...? 저장 방법 찾아야 함
+
+            //Bitmap bmp = new(width, height, imageGraphics);
+
+            //bmp.Save(outputPath);
+
+            
+
+            //////////////////////////////////////////////////////
 
             //using (Graphics g = Graphics.FromImage(image))
             //{

@@ -15,7 +15,7 @@ namespace YnuClassificationPrediction
         static readonly string PublishedName = "Iteration3";
 
         // 2번 ObjectDetection 전 이미지의 폴더 경로 --------------------------- 사용에 따라 수정
-        static readonly string TestImageFolder = @"C:\Users\최원석\Source\Repos\YnuObjectDetectionPrediction\Images\";
+        static readonly string TestImageFolder = @"C:\Users\chwonseok\source\repos\YnuObjectDetectionPrediction\Images\";
 
         // 3번 ObjectDetection 후 결과가 담길 폴더 경로 --------------------------- 사용에 따라 수정
         static readonly string ResultFolder = @"C:\Users\chwonseok\source\repos\YnuObjectDetectionPrediction\Result\";
@@ -27,7 +27,7 @@ namespace YnuClassificationPrediction
 
             var predictionCount = 0;
 
-            var outputPath = @"C:\Users\chwonseok\source\repos\YnuObjectDetectionPrediction\Result\";
+            var outputPath = @"C:\Users\chwonseok\source\repos\YnuObjectDetectionPrediction\Result\result.jpg";
 
             foreach (var imagePath in imagesPaths)
             {
