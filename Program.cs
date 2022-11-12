@@ -57,13 +57,13 @@ namespace YnuClassificationPrediction
 
                 foreach (var item in highProbability)
                 {
-                    RectangleInfo newBoundingBox = new RectangleInfo()
+                    BoundingBoxInfo newBoundingBox = new BoundingBoxInfo()
                     {
-                        BoundingBoxTag = item.TagName,
-                        BoundingBoxX = item.BoundingBox.Left * imageWidth,
-                        BoundingBoxY = item.BoundingBox.Top * imageHeight,
-                        BoundingBoxWidth = item.BoundingBox.Width * imageWidth,
-                        BoundingBoxHeight= item.BoundingBox.Height * imageHeight
+                        Tag = item.TagName,
+                        X = (float)(item.BoundingBox.Left * imageWidth),
+                        Y = (float)(item.BoundingBox.Top * imageHeight),
+                        Width = (float)(item.BoundingBox.Width * imageWidth),
+                        Height= (float)(item.BoundingBox.Height * imageHeight)
                     };
 
                     Console.WriteLine($"rectangle starting position is ({x},{y})\n{boundingBoxWidth}, {boundingBoxHeight}");
@@ -71,6 +71,8 @@ namespace YnuClassificationPrediction
 
                     // Draw boundingBox on the image
                     Drawing.DrawBoundingBox(newBoundingBox, imagePath, outputPath);
+
+                    // Calculations
                     
                 }
 
