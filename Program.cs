@@ -1,7 +1,11 @@
 ﻿using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction;
 using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction.Models;
-using SixLabors.ImageSharp;
+using System.Drawing;
+using Image = System.Drawing.Image;
+using SixImage = SixLabors.ImageSharp.Image;
 using YnuObjectDetectionPrediction;
+using System.Runtime.InteropServices;
+using Microsoft.AspNetCore.Razor.Hosting;
 
 namespace YnuClassificationPrediction
 {
@@ -18,7 +22,7 @@ namespace YnuClassificationPrediction
         static readonly string TestImageFolder = @"C:\Users\chwonseok\source\repos\YnuObjectDetectionPrediction\Images\";
 
         // 3번 ObjectDetection 후 결과가 담길 폴더 경로 --------------------------- 사용에 따라 수정
-        static readonly string ResultFolder = @"C:\Users\chwonseok\source\repos\YnuObjectDetectionPrediction\Result\";
+        static readonly string OutputFolderPath = @"C:\Users\chwonseok\source\repos\YnuObjectDetectionPrediction\Result";
 
         static async Task Main(string[] args)
         {
@@ -27,59 +31,54 @@ namespace YnuClassificationPrediction
 
             var predictionCount = 0;
 
-            var outputPath = @"C:\Users\chwonseok\source\repos\YnuObjectDetectionPrediction\Result\result.jpg";
-
             foreach (var imagePath in imagesPaths)
             {
-                // Get each file name
+                var threshhold = 0.85;
+
+                // Set file path and name
                 var fileName = Path.GetFileName(imagePath);
+                var outputPath = $"{OutputFolderPath}\\{fileName}";
 
                 // Get each image size
-                Image image = Image.Load($"{imagePath}");
+                SixImage image = SixImage.Load($"{imagePath}");
                 var imageWidth = image.Width;
                 var imageHeight = image.Height;
-
-                // Setup boundingBox dimension
-                double x = 0;
-                double y = 0;
-                double boundingBoxWidth = 0;
-                double boundingBoxHeight = 0;
 
                 // Get predictions of each image
                 var predictions = await GetImagePredictionsAsync(imagePath);
 
-                // 고도화 필요
-                var threshhold = 0.80;
-
                 var highProbability = predictions.Predictions.AsQueryable()
                     .Where(x => x.Probability >= threshhold)
                     .ToList();
+                
+                var img = Image.FromFile(imagePath);
 
                 foreach (var item in highProbability)
-                {
-                    BoundingBoxInfo newBoundingBox = new BoundingBoxInfo()
-                    {
-                        Tag = item.TagName,
-                        X = (float)(item.BoundingBox.Left * imageWidth),
-                        Y = (float)(item.BoundingBox.Top * imageHeight),
-                        Width = (float)(item.BoundingBox.Width * imageWidth),
-                        Height= (float)(item.BoundingBox.Height * imageHeight)
-                    };
+                {   
+                    var x = (float)(item.BoundingBox.Left * imageWidth);
+                    var y = (float)(item.BoundingBox.Top * imageHeight);
+                    var width = (float)(item.BoundingBox.Width * imageWidth);
+                    var height = (float)(item.BoundingBox.Height * imageHeight);
+                    var area = width * height;
+                    var diagonal = Math.Sqrt(Math.Pow(width, 2) + Math.Pow(height, 2));
 
-                    Console.WriteLine($"rectangle starting position is ({x},{y})\n{boundingBoxWidth}, {boundingBoxHeight}");
-                    Console.WriteLine($"tagname:{item.TagName}, probability:{item.Probability}");
+                    var marker = GetMarker(item.TagName);
 
-                    // Draw boundingBox on the image
-                    Drawing.DrawBoundingBox(newBoundingBox, imagePath, outputPath);
+                    Graphics g = Graphics.FromImage(img);
 
-                    // Calculations
-                    
+                    g.DrawRectangle(marker, x, y, width, height);
+
+                    Console.WriteLine($"종류:{item.TagName}\n확률:{item.Probability}\n");
                 }
 
+                img.Save(outputPath);
 
                 Console.WriteLine($"filename: {fileName}, Prediction Completed");
                 predictionCount++;
+
+                // TODO: 픽셀당길이 구하기
             }
+            
             Console.WriteLine($"{predictionCount}개 이미지 대상 Prediction 완료");
         }
 
@@ -104,6 +103,62 @@ namespace YnuClassificationPrediction
                     (new Guid(ProjectId), PublishedName, imageStream);
                 return predictions;
             };
+        }
+
+        static double GetCmPerPixel(PredictionModel item, float width)
+        {
+            //노란색 3 * 6 cm
+            //빨간색 5 * 10 cm
+            //파란색 8 * 16 cm
+            double cmPerPixel = 0;
+
+            if (item.TagName == "bluemarker")
+            {
+                cmPerPixel = 16 / width;
+            }
+            if (item.TagName == "redmarker")
+            {
+                cmPerPixel = 10 / width;
+            }
+            if (item.TagName == "yellowmarker")
+            {
+                cmPerPixel = 6 / width;
+            }
+            return cmPerPixel;
+        }
+
+        static Pen GetMarker(string marker)
+        {
+            var color = Color.Empty;
+
+            if (marker == "bluemarker")
+            {
+                color = Color.Blue;
+            }
+            if (marker == "redmarker")
+            {
+                color = Color.Red;
+            }
+            if (marker == "yellowmarker")
+            {
+                color = Color.Yellow;
+            }
+            if (marker == "crack")
+            {
+                color = Color.Gold;
+            }
+            if (marker == "efflorescence")
+            {
+                color = Color.Green;
+            }
+            if (marker == "exposure")
+            {
+                color = Color.DarkGray;
+            }
+
+            Pen result = new(color, 3);
+
+            return result;
         }
     }
 }
