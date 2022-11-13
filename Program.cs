@@ -1,15 +1,12 @@
 ﻿using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction;
 using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction.Models;
 using System.Drawing;
+using YnuObjectDetectionPrediction;
 using Image = System.Drawing.Image;
 using SixImage = SixLabors.ImageSharp.Image;
-using YnuObjectDetectionPrediction;
-using System.Runtime.InteropServices;
-using Microsoft.AspNetCore.Razor.Hosting;
 
 namespace YnuClassificationPrediction
 {
-    
     class PredictionConsole
     {
         // 1번 여기를 먼저 셋업해 주세요
@@ -61,7 +58,6 @@ namespace YnuClassificationPrediction
 
                 foreach (var item in highProbability)
                 {
-                    // item이 marker가 아닐 때 어떻게 처리하는지 확인 필요
                     if (item.TagName.Substring(item.TagName.Length - 6, 6) == "marker")
                     {
                         predictionResult.CmPerPixel = GetCmPerPixel(item, item.BoundingBox.Width);
@@ -83,12 +79,12 @@ namespace YnuClassificationPrediction
 
                     predictionResult.BoundingBoxes.Add(singleBb);
 
-
                     Graphics g = Graphics.FromImage(img);
                     var marker = GetMarker(singleBb.Tag);
                     g.DrawRectangle(marker, singleBb.X, singleBb.Y, singleBb.Width, singleBb.Height);
 
-                    Console.WriteLine($"종류:{singleBb.Tag}\n확률:{singleBb.Probability}\n가로:{singleBb.ActualWidth}cm\n세로:{singleBb.ActualHeight}");
+                    Console.WriteLine($"종류:{singleBb.Tag}\n확률:{singleBb.Probability}\n가로:{singleBb.ActualWidth}cm\n세로:{singleBb.ActualHeight}cm");
+                    Console.WriteLine("---------------------------------------------------------------------------");
                 }
 
                 img.Save(outputPath);
