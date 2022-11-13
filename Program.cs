@@ -49,34 +49,52 @@ namespace YnuClassificationPrediction
 
                 var highProbability = predictions.Predictions.AsQueryable()
                     .Where(x => x.Probability >= threshhold)
+                    .OrderByDescending(x => x.Probability)
                     .ToList();
                 
                 var img = Image.FromFile(imagePath);
 
-                foreach (var item in highProbability)
-                {   
-                    var x = (float)(item.BoundingBox.Left * imageWidth);
-                    var y = (float)(item.BoundingBox.Top * imageHeight);
-                    var width = (float)(item.BoundingBox.Width * imageWidth);
-                    var height = (float)(item.BoundingBox.Height * imageHeight);
-                    var area = width * height;
-                    var diagonal = Math.Sqrt(Math.Pow(width, 2) + Math.Pow(height, 2));
+                var predictionResult = new ImagePredictionModel()
+                {
+                    ImageName = fileName
+                };
 
-                    var marker = GetMarker(item.TagName);
+                foreach (var item in highProbability)
+                {
+                    // item이 marker가 아닐 때 어떻게 처리하는지 확인 필요
+                    if (item.TagName.Substring(item.TagName.Length - 6, 6) == "marker")
+                    {
+                        predictionResult.CmPerPixel = GetCmPerPixel(item, item.BoundingBox.Width);
+                    }
+
+                    var singleBb = new BoundingBoxInfo()
+                    {
+                        Tag = item.TagName,
+                        Probability = item.Probability,
+                        X = (float)(item.BoundingBox.Left * imageWidth),
+                        Y = (float)(item.BoundingBox.Top * imageHeight),
+                        Width = (float)(item.BoundingBox.Width * imageWidth),
+                        Height = (float)(item.BoundingBox.Height * imageHeight),
+                        Area = (float)(item.BoundingBox.Width * item.BoundingBox.Height),
+                        Diagonal = Math.Sqrt(Math.Pow(item.BoundingBox.Width, 2) + Math.Pow(item.BoundingBox.Height, 2)),
+                        ActualWidth = (float)(predictionResult.CmPerPixel * item.BoundingBox.Width),
+                        ActualHeight = (float)(predictionResult.CmPerPixel * item.BoundingBox.Height)
+                    };
+
+                    predictionResult.BoundingBoxes.Add(singleBb);
+
 
                     Graphics g = Graphics.FromImage(img);
+                    var marker = GetMarker(singleBb.Tag);
+                    g.DrawRectangle(marker, singleBb.X, singleBb.Y, singleBb.Width, singleBb.Height);
 
-                    g.DrawRectangle(marker, x, y, width, height);
-
-                    Console.WriteLine($"종류:{item.TagName}\n확률:{item.Probability}\n");
+                    Console.WriteLine($"종류:{singleBb.Tag}\n확률:{singleBb.Probability}\n가로:{singleBb.ActualWidth}cm\n세로:{singleBb.ActualHeight}");
                 }
 
                 img.Save(outputPath);
-
+                
                 Console.WriteLine($"filename: {fileName}, Prediction Completed");
                 predictionCount++;
-
-                // TODO: 픽셀당길이 구하기
             }
             
             Console.WriteLine($"{predictionCount}개 이미지 대상 Prediction 완료");
@@ -105,7 +123,7 @@ namespace YnuClassificationPrediction
             };
         }
 
-        static double GetCmPerPixel(PredictionModel item, float width)
+        static double GetCmPerPixel(PredictionModel item, double width)
         {
             //노란색 3 * 6 cm
             //빨간색 5 * 10 cm
