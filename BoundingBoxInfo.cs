@@ -13,5 +13,7 @@
         public double Diagonal { get; set; }
         public float ActualWidth { get; set; }
         public float ActualHeight { get; set; }
+        public float ActualDiagonal { get; set; }
+        public float ActualArea { get; set; }
     }
 }

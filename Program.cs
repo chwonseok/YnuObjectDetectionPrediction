@@ -1,6 +1,8 @@
-﻿using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction;
+﻿using CsvHelper;
+using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction;
 using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction.Models;
 using System.Drawing;
+using System.Globalization;
 using YnuObjectDetectionPrediction;
 using Image = System.Drawing.Image;
 using SixImage = SixLabors.ImageSharp.Image;
@@ -16,15 +18,16 @@ namespace YnuClassificationPrediction
         static readonly string PublishedName = "Iteration3";
 
         // 2번 ObjectDetection 전 이미지의 폴더 경로 --------------------------- 사용에 따라 수정
-        static readonly string TestImageFolder = @"C:\Users\chwonseok\source\repos\YnuObjectDetectionPrediction\Images\";
+        static readonly string ImageFolder = @"C:\Users\chwonseok\source\repos\YnuObjectDetectionPrediction\Images\";
 
         // 3번 ObjectDetection 후 결과가 담길 폴더 경로 --------------------------- 사용에 따라 수정
-        static readonly string OutputFolderPath = @"C:\Users\chwonseok\source\repos\YnuObjectDetectionPrediction\Result";
+        static readonly string ImageResultPath = @"C:\Users\chwonseok\source\repos\YnuObjectDetectionPrediction\ImageResult\";
+        static readonly string CsvResultPath = @"C:\Users\chwonseok\source\repos\YnuObjectDetectionPrediction\CsvResult\";
 
         static async Task Main(string[] args)
         {
             // Get each image path
-            var imagesPaths = Directory.GetFiles(TestImageFolder);
+            var imagesPaths = Directory.GetFiles(ImageFolder);
 
             var predictionCount = 0;
 
@@ -34,7 +37,7 @@ namespace YnuClassificationPrediction
 
                 // Set file path and name
                 var fileName = Path.GetFileName(imagePath);
-                var outputPath = $"{OutputFolderPath}\\{fileName}";
+                var outputPath = $"{ImageResultPath}{fileName}";
 
                 // Get each image size
                 SixImage image = SixImage.Load($"{imagePath}");
@@ -77,11 +80,32 @@ namespace YnuClassificationPrediction
                         ActualHeight = (float)(predictionResult.CmPerPixel * item.BoundingBox.Height)
                     };
 
+                    singleBb.ActualDiagonal = (float)(predictionResult.CmPerPixel * singleBb.Diagonal);
+                    singleBb.ActualArea = (float)(predictionResult.CmPerPixel * singleBb.Area);
+
                     predictionResult.BoundingBoxes.Add(singleBb);
 
                     Graphics g = Graphics.FromImage(img);
                     var marker = GetMarker(singleBb.Tag);
                     g.DrawRectangle(marker, singleBb.X, singleBb.Y, singleBb.Width, singleBb.Height);
+
+                    // Grenerate result on csv file
+                    var resultRow = new List<string>();
+                    var headerRow = "분류,확률,가로,세로,대각선,면적";
+                    var eachRow = $"{singleBb.Tag},{singleBb.Probability * 100},{singleBb.ActualWidth},{singleBb.ActualHeight},{singleBb.ActualDiagonal},{singleBb.ActualArea}";
+
+                    resultRow.Add(headerRow);
+                    resultRow.Add(eachRow);
+
+                    //using (var writer = new StreamWriter($"{CsvResultPath}{fileName}.csv"))
+                    //using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+                    //{
+                    //    csv.WriteRecords(resultRow); // 여기 에러 나는 중
+                    //}
+
+                    var writer = new StreamWriter($"{CsvResultPath}{fileName}.csv");
+                    var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+                    csv.WriteRecords(resultRow);
 
                     Console.WriteLine($"종류:{singleBb.Tag}\n확률:{singleBb.Probability}\n가로:{singleBb.ActualWidth}cm\n세로:{singleBb.ActualHeight}cm");
                     Console.WriteLine("---------------------------------------------------------------------------");
