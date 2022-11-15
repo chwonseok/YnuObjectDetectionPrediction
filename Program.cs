@@ -1,8 +1,8 @@
-﻿using CsvHelper;
-using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction;
+﻿using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction;
 using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction.Models;
 using System.Drawing;
 using System.Globalization;
+using System.Text;
 using YnuObjectDetectionPrediction;
 using Image = System.Drawing.Image;
 using SixImage = SixLabors.ImageSharp.Image;
@@ -18,11 +18,11 @@ namespace YnuClassificationPrediction
         static readonly string PublishedName = "Iteration3";
 
         // 2번 ObjectDetection 전 이미지의 폴더 경로 --------------------------- 사용에 따라 수정
-        static readonly string ImageFolder = @"C:\Users\chwonseok\source\repos\YnuObjectDetectionPrediction\Images\";
+        static readonly string ImageFolder = @"C:\Users\최원석\source\repos\YnuObjectDetectionPrediction\Images\";
 
         // 3번 ObjectDetection 후 결과가 담길 폴더 경로 --------------------------- 사용에 따라 수정
-        static readonly string ImageResultPath = @"C:\Users\chwonseok\source\repos\YnuObjectDetectionPrediction\ImageResult\";
-        static readonly string CsvResultPath = @"C:\Users\chwonseok\source\repos\YnuObjectDetectionPrediction\CsvResult\";
+        static readonly string ImageResultPath = @"C:\Users\최원석\source\repos\YnuObjectDetectionPrediction\ImageResult\";
+        static readonly string CsvResultPath = @"C:\Users\최원석\source\repos\YnuObjectDetectionPrediction\CsvResult\";
 
         static async Task Main(string[] args)
         {
@@ -59,11 +59,18 @@ namespace YnuClassificationPrediction
                     ImageName = fileName
                 };
 
+                var resultRow = new StringBuilder();
+                var headerRow = "tagName,probability,width,height,diagonal,area";
+                resultRow.AppendLine(headerRow);
+
                 foreach (var item in highProbability)
                 {
-                    if (item.TagName.Substring(item.TagName.Length - 6, 6) == "marker")
+                    if (item.TagName.Length - 6 > 0)
                     {
-                        predictionResult.CmPerPixel = GetCmPerPixel(item, item.BoundingBox.Width);
+                        if (item.TagName.Substring(item.TagName.Length - 6, 6) == "marker")
+                        {
+                            predictionResult.CmPerPixel = GetCmPerPixel(item, item.BoundingBox.Width);
+                        }
                     }
 
                     var singleBb = new BoundingBoxInfo()
@@ -90,26 +97,15 @@ namespace YnuClassificationPrediction
                     g.DrawRectangle(marker, singleBb.X, singleBb.Y, singleBb.Width, singleBb.Height);
 
                     // Grenerate result on csv file
-                    var resultRow = new List<string>();
-                    var headerRow = "분류,확률,가로,세로,대각선,면적";
                     var eachRow = $"{singleBb.Tag},{singleBb.Probability * 100},{singleBb.ActualWidth},{singleBb.ActualHeight},{singleBb.ActualDiagonal},{singleBb.ActualArea}";
 
-                    resultRow.Add(headerRow);
-                    resultRow.Add(eachRow);
-
-                    //using (var writer = new StreamWriter($"{CsvResultPath}{fileName}.csv"))
-                    //using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-                    //{
-                    //    csv.WriteRecords(resultRow); // 여기 에러 나는 중
-                    //}
-
-                    var writer = new StreamWriter($"{CsvResultPath}{fileName}.csv");
-                    var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
-                    csv.WriteRecords(resultRow);
+                    resultRow.AppendLine(eachRow);
 
                     Console.WriteLine($"종류:{singleBb.Tag}\n확률:{singleBb.Probability}\n가로:{singleBb.ActualWidth}cm\n세로:{singleBb.ActualHeight}cm");
                     Console.WriteLine("---------------------------------------------------------------------------");
                 }
+
+                File.WriteAllText($"{CsvResultPath}{fileName}.csv", resultRow.ToString());
 
                 img.Save(outputPath);
                 
