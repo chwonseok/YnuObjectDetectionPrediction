@@ -1,7 +1,6 @@
 ﻿using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction;
 using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction.Models;
 using System.Drawing;
-using System.Globalization;
 using System.Text;
 using YnuObjectDetectionPrediction;
 using Image = System.Drawing.Image;
@@ -12,17 +11,18 @@ namespace YnuClassificationPrediction
     class PredictionConsole
     {
         // 1번 여기를 먼저 셋업해 주세요
-        static readonly string Endpoint = "https://chwscustomvision-prediction.cognitiveservices.azure.com/";
-        static readonly string PredictionKey = "873c10b5fe6d410dbfc789f3629c260d";
-        static readonly string ProjectId = "abbafae8-c681-4a27-8da0-2eddb2addb2f";
-        static readonly string PublishedName = "Iteration3";
+        static readonly string Endpoint = "";
+        static readonly string PredictionKey = "";
+        static readonly string ProjectId = "";
+        static readonly string PublishedName = "";
 
         // 2번 ObjectDetection 전 이미지의 폴더 경로 --------------------------- 사용에 따라 수정
-        static readonly string ImageFolder = @"C:\Users\최원석\source\repos\YnuObjectDetectionPrediction\Images\";
+        // 예시 ImageFolder = @"C:\Users\최원석\source\repos\YnuObjectDetectionPrediction\Images\"
+        static readonly string ImageFolder = @"";
 
         // 3번 ObjectDetection 후 결과가 담길 폴더 경로 --------------------------- 사용에 따라 수정
-        static readonly string ImageResultPath = @"C:\Users\최원석\source\repos\YnuObjectDetectionPrediction\ImageResult\";
-        static readonly string CsvResultPath = @"C:\Users\최원석\source\repos\YnuObjectDetectionPrediction\CsvResult\";
+        static readonly string ImageResultPath = @"";
+        static readonly string CsvResultPath = @"";
 
         static async Task Main(string[] args)
         {
@@ -65,11 +65,16 @@ namespace YnuClassificationPrediction
 
                 foreach (var item in highProbability)
                 {
-                    if (item.TagName.Length - 6 > 0)
+                    if (item.TagName.Length - 6 > 0 && item.TagName.Substring(item.TagName.Length - 6, 6) == "marker")
                     {
-                        if (item.TagName.Substring(item.TagName.Length - 6, 6) == "marker")
+                        if (item.BoundingBox.Height > item.BoundingBox.Width)
                         {
-                            predictionResult.CmPerPixel = GetCmPerPixel(item, item.BoundingBox.Width);
+                            // 가로보다 세로가 더 긴 경우
+                            predictionResult.CmPerPixel = GetCmPerPixel(item, item.BoundingBox.Height);
+                        }
+                        else
+                        {
+                            predictionResult.CmPerPixel = GetCmPerPixel(item, item.BoundingBox.Width); // 2번째 파라미터는 바운딩박스 가로 px값
                         }
                     }
 
@@ -84,7 +89,7 @@ namespace YnuClassificationPrediction
                         Area = (float)(item.BoundingBox.Width * item.BoundingBox.Height),
                         Diagonal = Math.Sqrt(Math.Pow(item.BoundingBox.Width, 2) + Math.Pow(item.BoundingBox.Height, 2)),
                         ActualWidth = (float)(predictionResult.CmPerPixel * item.BoundingBox.Width),
-                        ActualHeight = (float)(predictionResult.CmPerPixel * item.BoundingBox.Height)
+                        ActualHeight = (float)(predictionResult.CmPerPixel * item.BoundingBox.Height - 1.2)
                     };
 
                     singleBb.ActualDiagonal = (float)(predictionResult.CmPerPixel * singleBb.Diagonal);
@@ -179,7 +184,7 @@ namespace YnuClassificationPrediction
             }
             if (marker == "crack")
             {
-                color = Color.Gold;
+                color = Color.Black;
             }
             if (marker == "efflorescence")
             {
@@ -187,7 +192,7 @@ namespace YnuClassificationPrediction
             }
             if (marker == "exposure")
             {
-                color = Color.DarkGray;
+                color = Color.DarkKhaki;
             }
 
             Pen result = new(color, 3);
